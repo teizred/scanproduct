@@ -15,6 +15,20 @@
       "when": 1777281740247,
       "tag": "0001_illegal_mandarin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777973608022,
+      "tag": "0002_illegal_secret_warriors",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1777974074758,
+      "tag": "0003_elite_kulan_gath",
+      "breakpoints": true
     }
   ]
 }
