@@ -12,12 +12,17 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.95.0",
     "@neondatabase/serverless": "^1.1.0",
+    "@tailwindcss/typography": "^0.5.19",
+    "@zxing/browser": "^0.2.0",
     "better-auth": "^1.6.9",
     "drizzle-orm": "^0.45.2",
+    "lucide-react": "^1.14.0",
     "next": "16.2.4",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-markdown": "^10.1.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
