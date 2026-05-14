@@ -9,6 +9,5 @@ export const auth = betterAuth({
     schema,
     usePlural: true,
   }),
-  baseURL: process.env.BETTER_AUTH_URL,
   emailAndPassword: { enabled: true },
 });
