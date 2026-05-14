@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { useRouter } from "next/navigation";
 import { fetchProductByBarcode, OFFProduct } from "@/lib/openfoodfacts";
-import { Camera, RefreshCw, CheckCircle, ArrowRight, Loader2, ChevronLeft } from "lucide-react";
+import { Camera, CheckCircle, Loader2, ChevronLeft, Calendar, Info, X } from "lucide-react";
 import Link from "next/link";
+import BottomNav from "@/app/components/BottomNav";
+import { cn } from "@/lib/utils";
 
 type Step = "barcode" | "expiry" | "confirm";
 
@@ -113,19 +115,15 @@ export default function ScanPage() {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     
-    // Set canvas dimensions to match video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     
-    // Draw current frame to canvas
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
-    // Get base64 image data
     const imageBase64 = canvas.toDataURL("image/jpeg", 0.8);
     
-    // Stop video stream
     if (videoRef.current?.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
       stream.getTracks().forEach((track) => track.stop());
@@ -186,7 +184,6 @@ export default function ScanPage() {
   };
 
   const skipToConfirm = () => {
-    // Stop video stream
     if (videoRef.current?.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
       stream.getTracks().forEach((track) => track.stop());
@@ -195,160 +192,182 @@ export default function ScanPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col">
-      <header className="p-4 flex items-center justify-between z-10 bg-zinc-900/80 backdrop-blur-md">
-        <Link href="/" className="p-2 rounded-full bg-zinc-800 text-zinc-300">
+    <div className="min-h-screen bg-zinc-950 flex flex-col relative overflow-hidden">
+      {/* Immersive Header */}
+      <header className="p-6 flex items-center justify-between fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent">
+        <Link href="/" className="p-2 rounded-2xl glass text-zinc-300">
           <ChevronLeft size={24} />
         </Link>
-        <h1 className="font-semibold text-lg">
-          {step === "barcode" && "Scanner le Code-barres"}
-          {step === "expiry" && "Scanner la Date"}
-          {step === "confirm" && "Confirmer"}
-        </h1>
-        <div className="w-10"></div> {/* Spacer for centering */}
+        <div className="text-center">
+          <h1 className="text-white font-bold tracking-tight">
+            {step === "barcode" && "Scanner le Code-barres"}
+            {step === "expiry" && "Scanner la Date"}
+            {step === "confirm" && "Confirmer le produit"}
+          </h1>
+          <div className="flex justify-center gap-1 mt-1">
+            <div className={cn("h-1 w-4 rounded-full transition-colors", step === "barcode" ? "bg-emerald-500" : "bg-zinc-800")} />
+            <div className={cn("h-1 w-4 rounded-full transition-colors", step === "expiry" ? "bg-emerald-500" : "bg-zinc-800")} />
+            <div className={cn("h-1 w-4 rounded-full transition-colors", step === "confirm" ? "bg-emerald-500" : "bg-zinc-800")} />
+          </div>
+        </div>
+        <div className="w-10" />
       </header>
 
       {error && (
-        <div className="bg-rose-500 text-white p-3 mx-4 mt-4 rounded-xl text-sm font-medium">
-          {error}
+        <div className="fixed top-24 left-6 right-6 z-50 glass border-rose-500/20 bg-rose-500/10 p-4 rounded-2xl flex items-center gap-3">
+          <Info className="text-rose-500 shrink-0" size={20} />
+          <p className="text-rose-500 text-sm font-medium">{error}</p>
+          <button onClick={() => setError("")} className="ml-auto text-rose-500/50">
+            <X size={16} />
+          </button>
         </div>
       )}
 
-      <main className="flex-1 flex flex-col relative">
-        {/* Hidden canvas for image capture */}
+      <main className="flex-1 flex flex-col">
         <canvas ref={canvasRef} className="hidden" />
 
-        {/* Video Viewer for steps 1 and 2 */}
         {(step === "barcode" || step === "expiry") && (
-          <div className="flex-1 relative overflow-hidden flex items-center justify-center bg-black">
+          <div className="flex-1 relative flex items-center justify-center bg-black">
             <video
               ref={videoRef}
               autoPlay
               playsInline
               muted
-              className="absolute min-w-full min-h-full object-cover"
+              className="absolute min-w-full min-h-full object-cover opacity-80"
             />
             
-            {/* Overlay Guides */}
-            <div className="absolute inset-0 border-[40px] border-black/50 flex items-center justify-center pointer-events-none">
-              <div className="w-full h-48 border-2 border-emerald-500 rounded-xl relative">
+            {/* Viewfinder Overlay */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="w-[85%] max-w-sm aspect-square relative">
+                {/* Corners */}
+                <div className="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-emerald-500 rounded-tl-3xl shadow-[0_0_20px_rgba(16,185,129,0.3)]" />
+                <div className="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-emerald-500 rounded-tr-3xl shadow-[0_0_20px_rgba(16,185,129,0.3)]" />
+                <div className="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-emerald-500 rounded-bl-3xl shadow-[0_0_20px_rgba(16,185,129,0.3)]" />
+                <div className="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-emerald-500 rounded-br-3xl shadow-[0_0_20px_rgba(16,185,129,0.3)]" />
+                
+                {/* Scanning line for barcode */}
                 {step === "barcode" && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-full h-0.5 bg-rose-500 opacity-80 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.8)]"></div>
-                  </div>
+                  <div className="absolute inset-x-0 h-0.5 bg-emerald-500/80 animate-[scan_2s_infinite] shadow-[0_0_15px_rgba(16,185,129,0.8)]" />
                 )}
-                <div className="absolute -top-10 left-0 right-0 text-center text-white font-medium drop-shadow-md">
-                  {step === "barcode" ? "Placez le code-barres ici" : "Placez la date de péremption ici"}
+
+                <div className="absolute -bottom-12 left-0 right-0 text-center text-zinc-400 text-sm font-medium">
+                  {step === "barcode" ? "Alignez le code-barres" : "Cadrez la date de péremption"}
                 </div>
               </div>
             </div>
 
-            {/* Loading Overlay */}
             {isProcessing && (
-              <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center z-20">
-                <Loader2 className="animate-spin text-emerald-500 mb-4" size={48} />
-                <p className="text-lg font-medium">Analyse en cours...</p>
+              <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center z-40">
+                <div className="relative">
+                  <div className="h-24 w-24 rounded-full border-4 border-zinc-800 border-t-emerald-500 animate-spin" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Loader2 className="text-emerald-500" size={32} />
+                  </div>
+                </div>
+                <p className="mt-6 text-white font-black tracking-widest uppercase text-xs">Analyse intelligente...</p>
               </div>
             )}
           </div>
         )}
 
-        {/* Controls for Barcode Step */}
-        {step === "barcode" && !isProcessing && (
-          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black to-transparent flex flex-col items-center gap-6">
+        {/* Action Controls */}
+        {!isProcessing && (step === "barcode" || step === "expiry") && (
+          <div className="fixed bottom-32 left-0 right-0 flex flex-col items-center gap-6 px-6 z-40">
+            {step === "expiry" && (
+              <button
+                onClick={handleCaptureExpiry}
+                className="w-20 h-20 bg-emerald-500 rounded-full border-[6px] border-white/20 flex items-center justify-center active:scale-90 transition-transform shadow-[0_0_30px_rgba(16,185,129,0.4)]"
+              >
+                <div className="h-14 w-14 rounded-full bg-emerald-400 flex items-center justify-center border-2 border-white/40">
+                  <Camera size={32} className="text-white" />
+                </div>
+              </button>
+            )}
+            
             <button
               onClick={skipToConfirm}
-              className="text-zinc-300 font-medium py-2 px-6 bg-zinc-800/80 rounded-full backdrop-blur-md transition-colors hover:bg-zinc-700/80"
+              className="glass px-8 py-4 rounded-[2rem] text-white font-bold text-sm tracking-wide hover:bg-white/20 transition-all pointer-events-auto shadow-2xl"
             >
               Saisir manuellement
             </button>
           </div>
         )}
 
-        {/* Controls for Expiry Step */}
-        {step === "expiry" && !isProcessing && (
-          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black to-transparent flex flex-col items-center gap-6">
-            <button
-              onClick={handleCaptureExpiry}
-              className="w-20 h-20 bg-emerald-500 rounded-full border-4 border-white flex items-center justify-center active:scale-95 transition-transform shadow-[0_0_20px_rgba(16,185,129,0.4)]"
-            >
-              <Camera size={32} className="text-white" />
-            </button>
-            <button
-              onClick={skipToConfirm}
-              className="text-zinc-300 font-medium py-2 px-6 bg-zinc-800/80 rounded-full backdrop-blur-md"
-            >
-              Saisir manuellement
-            </button>
-          </div>
-        )}
-
-        {/* Manual Entry Fallback / Confirm Step */}
+        {/* Confirmation Form */}
         {step === "confirm" && (
-          <div className="flex-1 bg-zinc-50 dark:bg-zinc-950 p-6 overflow-y-auto">
-            <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-100 dark:border-zinc-800 space-y-6">
+          <div className="flex-1 bg-zinc-950 p-6 pt-24 overflow-y-auto">
+            <div className="glass rounded-[2.5rem] p-8 border-zinc-800 space-y-8 max-w-lg mx-auto">
               
               {productData?.product.image_url && (
-                <div className="flex justify-center mb-6">
-                  <img 
-                    src={productData.product.image_url} 
-                    alt="Produit" 
-                    className="h-32 object-contain rounded-lg"
-                  />
+                <div className="flex justify-center -mt-16">
+                  <div className="h-32 w-32 glass rounded-3xl p-2 border-zinc-800 shadow-2xl overflow-hidden">
+                    <img 
+                      src={productData.product.image_url} 
+                      alt="Produit" 
+                      className="h-full w-full object-contain rounded-2xl"
+                    />
+                  </div>
                 </div>
               )}
 
-              <div>
-                <label className="block text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">Nom du produit</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-zinc-100 dark:bg-zinc-800 border-none rounded-xl p-4 text-zinc-900 dark:text-zinc-50 focus:ring-2 focus:ring-emerald-500 outline-none"
-                  placeholder="Ex: Lait demi-écrémé"
-                />
-              </div>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">Produit</label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-4 text-white font-bold focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all"
+                    placeholder="Nom du produit"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">Date de péremption (DLC)</label>
-                <input
-                  type="date"
-                  value={expiryDate}
-                  onChange={(e) => setExpiryDate(e.target.value)}
-                  className="w-full bg-zinc-100 dark:bg-zinc-800 border-none rounded-xl p-4 text-zinc-900 dark:text-zinc-50 focus:ring-2 focus:ring-emerald-500 outline-none"
-                />
-              </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1 flex items-center gap-2">
+                    <Calendar size={12} />
+                    Date de péremption
+                  </label>
+                  <input
+                    type="date"
+                    value={expiryDate}
+                    onChange={(e) => setExpiryDate(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-4 text-white font-bold focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all color-scheme-dark"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">Quantité</label>
-                <div className="flex items-center space-x-4">
-                  <button 
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-12 h-12 rounded-xl bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-xl font-bold"
-                  >
-                    -
-                  </button>
-                  <span className="text-xl font-bold text-zinc-900 dark:text-zinc-50 w-8 text-center">{quantity}</span>
-                  <button 
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="w-12 h-12 rounded-xl bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-xl font-bold"
-                  >
-                    +
-                  </button>
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">Quantité</label>
+                  <div className="flex items-center gap-4">
+                    <button 
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className="h-14 w-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-white font-bold hover:bg-zinc-800 active:scale-90 transition-all"
+                    >
+                      -
+                    </button>
+                    <div className="flex-1 h-14 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-xl font-black text-white">
+                      {quantity}
+                    </div>
+                    <button 
+                      onClick={() => setQuantity(quantity + 1)}
+                      className="h-14 w-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-white font-bold hover:bg-zinc-800 active:scale-90 transition-all"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               </div>
 
               <button
                 onClick={handleSaveItem}
                 disabled={isProcessing || !name || !expiryDate}
-                className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl p-4 flex items-center justify-center space-x-2 transition-colors mt-8 shadow-lg shadow-emerald-500/20"
+                className="w-full bg-emerald-500 hover:bg-emerald-400 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-black rounded-2xl py-5 flex items-center justify-center gap-3 transition-all shadow-xl shadow-emerald-500/20 active:scale-95 mt-4"
               >
                 {isProcessing ? (
                   <Loader2 className="animate-spin" size={24} />
                 ) : (
                   <>
-                    <CheckCircle size={24} />
-                    <span>Ajouter au frigo</span>
+                    <CheckCircle size={24} strokeWidth={3} />
+                    <span>Valider & Ajouter</span>
                   </>
                 )}
               </button>
@@ -356,6 +375,20 @@ export default function ScanPage() {
           </div>
         )}
       </main>
+
+      <BottomNav />
+
+      <style jsx global>{`
+        @keyframes scan {
+          0% { top: 0%; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+          filter: invert(1);
+        }
+      `}</style>
     </div>
   );
 }

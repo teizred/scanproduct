@@ -1,0 +1,17 @@
+{
+  "name": "Frigo Intelligent",
+  "short_name": "Frigo Intel",
+  "description": "Réduisez le gaspillage alimentaire avec l'IA",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "/next.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

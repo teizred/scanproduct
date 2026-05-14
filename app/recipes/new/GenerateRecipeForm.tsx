@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, ChefHat, Check } from "lucide-react";
+import { Loader2, ChefHat, Check, Calendar } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export default function GenerateRecipeForm({ items }: { items: any[] }) {
   const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
@@ -33,15 +34,10 @@ export default function GenerateRecipeForm({ items }: { items: any[] }) {
       });
 
       if (res.ok) {
-        // Recipe generated successfully, redirect to recipes list
         router.push("/recipes");
-      } else {
-        const err = await res.json();
-        alert(err.error || "Erreur lors de la génération");
       }
     } catch (err) {
       console.error(err);
-      alert("Erreur réseau");
     } finally {
       setIsGenerating(false);
     }
@@ -49,8 +45,14 @@ export default function GenerateRecipeForm({ items }: { items: any[] }) {
 
   if (items.length === 0) {
     return (
-      <div className="bg-white dark:bg-zinc-900 p-8 rounded-2xl border border-zinc-100 dark:border-zinc-800 text-center">
-        <p className="text-zinc-500">Votre frigo est vide. Ajoutez des produits pour générer des recettes !</p>
+      <div className="flex flex-col items-center justify-center py-20 px-6 glass rounded-[2rem] border-dashed border-zinc-800 text-center space-y-4">
+        <div className="h-20 w-20 rounded-full bg-zinc-900 flex items-center justify-center">
+          <ChefHat size={40} className="text-zinc-700" />
+        </div>
+        <div className="space-y-1">
+          <p className="text-white font-bold text-lg">Frigo vide</p>
+          <p className="text-zinc-500 text-sm">Ajoutez des produits pour générer des recettes !</p>
+        </div>
       </div>
     );
   }
@@ -58,60 +60,82 @@ export default function GenerateRecipeForm({ items }: { items: any[] }) {
   const now = new Date();
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-3">
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 gap-3">
         {items.map((item) => {
           const isSelected = selectedItemIds.has(item.id);
-          const daysLeft = Math.ceil((new Date(item.expiryDate).getTime() - now.getTime()) / (1000 * 3600 * 24));
-          
-          let statusColor = "text-emerald-500";
-          if (daysLeft <= 1) statusColor = "text-rose-500 font-bold";
-          else if (daysLeft <= 3) statusColor = "text-orange-500 font-bold";
+          const expiry = new Date(item.expiryDate);
+          const daysLeft = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 3600 * 24));
+          const isUrgent = daysLeft <= 1;
+          const isWarning = daysLeft <= 3;
 
           return (
             <div 
               key={item.id}
               onClick={() => toggleItem(item.id)}
-              className={`p-4 rounded-xl border-2 cursor-pointer transition-colors flex items-center space-x-4 ${
+              className={cn(
+                "glass group rounded-3xl p-4 border-zinc-800 flex items-center gap-4 cursor-pointer transition-all active:scale-[0.98]",
                 isSelected 
-                  ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20" 
-                  : "border-transparent bg-white dark:bg-zinc-900 shadow-sm"
-              }`}
+                  ? "bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/5" 
+                  : "hover:border-zinc-700"
+              )}
             >
-              <div className={`w-6 h-6 rounded-md border flex items-center justify-center ${
-                isSelected ? "bg-emerald-500 border-emerald-500 text-white" : "border-zinc-300 dark:border-zinc-600"
-              }`}>
-                {isSelected && <Check size={16} />}
+              <div className={cn(
+                "h-6 w-6 rounded-lg border flex items-center justify-center transition-colors",
+                isSelected 
+                  ? "bg-emerald-500 border-emerald-500 text-white" 
+                  : "border-zinc-700 bg-zinc-900"
+              )}>
+                {isSelected && <Check size={14} strokeWidth={4} />}
               </div>
               
-              <div className="flex-1">
-                <h3 className="font-medium text-base">{item.name}</h3>
-                <p className={`text-sm ${statusColor}`}>
-                  {daysLeft <= 0 ? "Périmé / Aujourd'hui" : `Expire dans ${daysLeft} jour(s)`}
-                </p>
+              <div className="flex-1 min-w-0">
+                <h3 className={cn(
+                  "font-bold transition-colors truncate",
+                  isSelected ? "text-emerald-400" : "text-white"
+                )}>
+                  {item.name}
+                </h3>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <div className={cn(
+                    "flex items-center gap-1 text-[10px] font-black uppercase tracking-wider",
+                    isUrgent ? "text-rose-500" : isWarning ? "text-orange-500" : "text-emerald-500"
+                  )}>
+                    <Calendar size={10} />
+                    {daysLeft <= 0 ? "Aujourd'hui" : `J-${daysLeft}`}
+                  </div>
+                </div>
               </div>
+
+              {item.imageUrl && (
+                <div className="h-10 w-10 rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
+                  <img src={item.imageUrl} alt="" className="w-full h-full object-cover opacity-50" />
+                </div>
+              )}
             </div>
           );
         })}
       </div>
 
-      <button
-        onClick={handleGenerate}
-        disabled={isGenerating || selectedItemIds.size === 0}
-        className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl p-4 flex items-center justify-center space-x-2 transition-colors sticky bottom-6 shadow-lg shadow-emerald-500/20"
-      >
-        {isGenerating ? (
-          <>
-            <Loader2 className="animate-spin" size={24} />
-            <span>Création de la recette...</span>
-          </>
-        ) : (
-          <>
-            <ChefHat size={24} />
-            <span>Générer ({selectedItemIds.size} ingrédient{selectedItemIds.size > 1 ? 's' : ''})</span>
-          </>
-        )}
-      </button>
+      <div className="fixed bottom-32 left-6 right-6 flex justify-center pointer-events-none z-40">
+        <button
+          onClick={handleGenerate}
+          disabled={isGenerating || selectedItemIds.size === 0}
+          className="w-full max-w-lg bg-emerald-500 hover:bg-emerald-400 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-black rounded-2xl py-4 flex items-center justify-center gap-3 transition-all shadow-2xl shadow-emerald-500/40 pointer-events-auto active:scale-95 disabled:shadow-none"
+        >
+          {isGenerating ? (
+            <>
+              <Loader2 className="animate-spin" size={24} />
+              <span>Génération...</span>
+            </>
+          ) : (
+            <>
+              <ChefHat size={24} />
+              <span>Générer ({selectedItemIds.size} ingrédient{selectedItemIds.size > 1 ? 's' : ''})</span>
+            </>
+          )}
+        </button>
+      </div>
     </div>
   );
 }

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2, Refrigerator } from "lucide-react";
+import { Trash2, Refrigerator, Loader2, Calendar } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 type FridgeItem = {
   id: string;
@@ -25,13 +26,10 @@ export default function FridgeList({ initialItems }: { initialItems: FridgeItem[
       });
       if (res.ok) {
         setItems(items.filter((item) => item.id !== id));
-        router.refresh(); // Update the server data
-      } else {
-        alert("Erreur lors de la suppression");
+        router.refresh();
       }
     } catch (err) {
       console.error(err);
-      alert("Erreur réseau");
     } finally {
       setIsDeleting(null);
     }
@@ -39,10 +37,14 @@ export default function FridgeList({ initialItems }: { initialItems: FridgeItem[
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-center">
-        <Refrigerator size={48} className="text-zinc-300 dark:text-zinc-700 mb-4" />
-        <p className="text-zinc-500 dark:text-zinc-400 font-medium">Votre frigo est vide.</p>
-        <p className="text-zinc-400 dark:text-zinc-500 text-sm mt-2">Scannez des produits pour commencer.</p>
+      <div className="flex flex-col items-center justify-center py-20 px-6 glass rounded-[2rem] border-dashed border-zinc-800 text-center space-y-4">
+        <div className="h-20 w-20 rounded-full bg-zinc-900 flex items-center justify-center">
+          <Refrigerator size={40} className="text-zinc-700" />
+        </div>
+        <div className="space-y-1">
+          <p className="text-white font-bold text-lg">Votre frigo est vide</p>
+          <p className="text-zinc-500 text-sm">Scannez des produits pour commencer à suivre vos dates de péremption.</p>
+        </div>
       </div>
     );
   }
@@ -54,39 +56,48 @@ export default function FridgeList({ initialItems }: { initialItems: FridgeItem[
       {items.map((item) => {
         const expiry = new Date(item.expiryDate);
         const daysLeft = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 3600 * 24));
+        const isUrgent = daysLeft <= 1;
+        const isWarning = daysLeft <= 3;
         
-        let statusColor = "text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20";
-        if (daysLeft <= 1) statusColor = "text-rose-500 bg-rose-50 dark:bg-rose-900/20";
-        else if (daysLeft <= 3) statusColor = "text-orange-500 bg-orange-50 dark:bg-orange-900/20";
-
         return (
-          <div key={item.id} className="bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-            <div className="flex items-center space-x-4 overflow-hidden">
-              <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden">
-                {item.imageUrl ? (
-                  <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
-                ) : (
-                  <Refrigerator size={24} className="text-zinc-400" />
-                )}
-              </div>
-              <div className="min-w-0">
-                <h3 className="font-semibold text-base truncate">{item.name}</h3>
-                <div className="flex items-center space-x-2 mt-1">
-                  <span className={`text-xs font-bold px-2 py-1 rounded-md ${statusColor}`}>
-                    {daysLeft < 0 ? "Périmé" : daysLeft === 0 ? "Aujourd'hui" : `J-${daysLeft}`}
-                  </span>
-                  <span className="text-sm text-zinc-500 dark:text-zinc-400">Qté: {item.quantity}</span>
+          <div key={item.id} className="glass group rounded-3xl p-4 border-zinc-800 flex items-center gap-4 hover:border-zinc-700 transition-all">
+            <div className="h-20 w-20 rounded-2xl bg-zinc-900 border border-zinc-800 overflow-hidden flex items-center justify-center">
+              {item.imageUrl ? (
+                <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+              ) : (
+                <Refrigerator size={28} className="text-zinc-800" />
+              )}
+            </div>
+
+            <div className="flex-1 min-w-0 space-y-1">
+              <h3 className="font-bold text-white truncate text-lg tracking-tight">{item.name}</h3>
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  "flex items-center gap-1 text-xs font-black px-2.5 py-1 rounded-xl uppercase tracking-wider",
+                  isUrgent 
+                    ? "bg-rose-500/10 text-rose-500 border border-rose-500/20" 
+                    : isWarning 
+                      ? "bg-orange-500/10 text-orange-500 border border-orange-500/20"
+                      : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                )}>
+                  <Calendar size={12} />
+                  {daysLeft < 0 ? "Périmé" : daysLeft === 0 ? "Aujourd'hui" : `J-${daysLeft}`}
                 </div>
+                <span className="text-zinc-500 text-sm font-medium">Qté: {item.quantity}</span>
               </div>
             </div>
             
             <button
               onClick={() => handleDelete(item.id)}
               disabled={isDeleting === item.id}
-              className="p-3 text-zinc-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-colors disabled:opacity-50"
+              className="h-12 w-12 flex items-center justify-center text-zinc-600 hover:text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-all disabled:opacity-50"
               aria-label="Supprimer"
             >
-              <Trash2 size={20} />
+              {isDeleting === item.id ? (
+                <Loader2 size={20} className="animate-spin" />
+              ) : (
+                <Trash2 size={20} />
+              )}
             </button>
           </div>
         );

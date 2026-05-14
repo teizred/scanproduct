@@ -4,8 +4,8 @@ import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { fridgeItems } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
-import Link from "next/link";
-import { ScanBarcode, Refrigerator, ChefHat, BellRing, LogOut } from "lucide-react";
+import { BellRing, ArrowUpRight, TrendingDown, Info } from "lucide-react";
+import BottomNav from "@/app/components/BottomNav";
 import SignOutButton from "@/app/components/SignOutButton";
 
 export default async function Dashboard() {
@@ -36,101 +36,125 @@ export default async function Dashboard() {
   const antiWasteScore = 850;
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 pb-20">
+    <div className="pb-32">
       {/* Header */}
-      <header className="bg-white dark:bg-zinc-900 p-6 shadow-sm flex justify-between items-center sticky top-0 z-10">
-        <div>
-          <h1 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-            Frigo Intelligent
+      <header className="p-6 flex justify-between items-center bg-zinc-950/50 backdrop-blur-xl sticky top-0 z-30">
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-emerald-500 uppercase tracking-widest">Dashboard</p>
+          <h1 className="text-2xl font-bold text-white">
+            Hello, {session.user.name?.split(" ")[0] || "Toi"} ! 👋
           </h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Bonjour, {session.user.name || "Utilisateur"} 👋
-          </p>
         </div>
         <SignOutButton />
       </header>
 
-      <main className="p-6 max-w-3xl mx-auto space-y-8">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white dark:bg-zinc-900 p-5 rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-800 flex flex-col items-center justify-center">
-            <span className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Score Anti-Gaspi</span>
-            <span className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{antiWasteScore}</span>
-            <span className="text-xs text-emerald-600/80 dark:text-emerald-400/80 mt-1">+50 ce mois</span>
+      <main className="px-6 space-y-8 max-w-4xl mx-auto">
+        {/* Hero Score Card */}
+        <div className="relative group overflow-hidden rounded-[2rem] p-8 glass bg-gradient-to-br from-emerald-500/20 to-transparent border-emerald-500/20">
+          <div className="absolute top-0 right-0 p-4">
+            <Info size={20} className="text-emerald-500/50" />
           </div>
-          <div className="bg-white dark:bg-zinc-900 p-5 rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-800 flex flex-col items-center justify-center">
-            <span className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Économies</span>
-            <span className="text-3xl font-bold text-blue-600 dark:text-blue-400">{moneySaved} €</span>
-            <span className="text-xs text-blue-600/80 dark:text-blue-400/80 mt-1">Estimées ce mois</span>
+          
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-2xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/40">
+                <TrendingDown className="text-white" size={24} />
+              </div>
+              <div>
+                <p className="text-zinc-400 text-sm font-medium">Score Anti-Gaspi</p>
+                <p className="text-emerald-400 text-xs">+12% vs mois dernier</p>
+              </div>
+            </div>
+            
+            <div className="flex items-baseline gap-2">
+              <span className="text-6xl font-black text-white leading-none tracking-tighter">
+                {antiWasteScore}
+              </span>
+              <span className="text-zinc-500 font-bold uppercase tracking-widest text-sm">Points</span>
+            </div>
+
+            <div className="w-full bg-zinc-900 h-2 rounded-full overflow-hidden">
+              <div className="bg-emerald-500 h-full w-[85%] rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+            </div>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <section>
-          <h2 className="text-lg font-semibold mb-4">Actions Rapides</h2>
-          <div className="grid grid-cols-3 gap-3">
-            <Link href="/scan" className="flex flex-col items-center justify-center bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 p-4 rounded-2xl transition-transform active:scale-95">
-              <ScanBarcode className="mb-2" size={28} />
-              <span className="text-sm font-medium">Scanner</span>
-            </Link>
-            <Link href="/fridge" className="flex flex-col items-center justify-center bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 p-4 rounded-2xl transition-transform active:scale-95">
-              <Refrigerator className="mb-2" size={28} />
-              <span className="text-sm font-medium">Mon Frigo</span>
-            </Link>
-            <Link href="/recipes/new" className="flex flex-col items-center justify-center bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 p-4 rounded-2xl transition-transform active:scale-95">
-              <ChefHat className="mb-2" size={28} />
-              <span className="text-sm font-medium">Recettes</span>
-            </Link>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="glass rounded-[2rem] p-6 border-zinc-800 flex items-center justify-between group">
+            <div className="space-y-1">
+              <p className="text-zinc-500 text-sm font-medium">Économies Estimées</p>
+              <p className="text-3xl font-bold text-white">{moneySaved} €</p>
+            </div>
+            <div className="h-12 w-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:border-emerald-500/50 transition-colors">
+              <ArrowUpRight className="text-zinc-400 group-hover:text-emerald-500 transition-colors" size={24} />
+            </div>
           </div>
-        </section>
+          
+          <div className="glass rounded-[2rem] p-6 border-zinc-800 flex items-center justify-between group">
+            <div className="space-y-1">
+              <p className="text-zinc-500 text-sm font-medium">Items en stock</p>
+              <p className="text-3xl font-bold text-white">{items.length}</p>
+            </div>
+            <div className="h-12 w-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:border-blue-500/50 transition-colors">
+              <BellRing className="text-zinc-400 group-hover:text-blue-500 transition-colors" size={24} />
+            </div>
+          </div>
+        </div>
 
-        {/* Alerts / Expiring Soon */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold flex items-center">
-              <BellRing size={20} className="mr-2 text-rose-500" />
+        {/* Alerts Section */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
               À consommer vite
             </h2>
-            <span className="bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 text-xs font-bold px-2 py-1 rounded-full">
-              {expiringSoon.length}
-            </span>
+            <span className="text-zinc-500 text-sm font-medium">{expiringSoon.length} items</span>
           </div>
 
           {expiringSoon.length > 0 ? (
             <div className="space-y-3">
               {expiringSoon.map((item) => {
                 const daysLeft = Math.ceil((new Date(item.expiryDate).getTime() - now.getTime()) / (1000 * 3600 * 24));
+                const isUrgent = daysLeft <= 1;
+
                 return (
-                  <div key={item.id} className="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow-sm border border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-zinc-100 dark:bg-zinc-800 rounded-lg overflow-hidden flex items-center justify-center">
-                        {item.imageUrl ? (
-                          <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <Refrigerator size={20} className="text-zinc-400" />
-                        )}
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-base">{item.name}</h3>
-                        <p className="text-sm text-zinc-500 dark:text-zinc-400">Qté: {item.quantity}</p>
-                      </div>
+                  <div key={item.id} className="glass group rounded-3xl p-4 border-zinc-800 flex items-center gap-4 hover:border-zinc-700 transition-colors">
+                    <div className="h-16 w-16 rounded-2xl bg-zinc-900 border border-zinc-800 overflow-hidden flex items-center justify-center">
+                      {item.imageUrl ? (
+                        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="text-zinc-700 font-bold text-xl">{item.name[0]}</div>
+                      )}
                     </div>
-                    <div className="text-right">
-                      <span className={`font-bold ${daysLeft <= 1 ? 'text-rose-500' : 'text-orange-500'}`}>
-                        {daysLeft <= 0 ? "Aujourd'hui" : `J-${daysLeft}`}
-                      </span>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-white truncate">{item.name}</h3>
+                      <p className="text-zinc-500 text-sm">Qté: {item.quantity}</p>
+                    </div>
+
+                    <div className={`px-4 py-2 rounded-2xl text-sm font-black ${
+                      isUrgent 
+                        ? "bg-rose-500/10 text-rose-500 border border-rose-500/20" 
+                        : "bg-orange-500/10 text-orange-500 border border-orange-500/20"
+                    }`}>
+                      {daysLeft <= 0 ? "DLC" : `J-${daysLeft}`}
                     </div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="bg-white dark:bg-zinc-900 p-8 rounded-xl shadow-sm border border-zinc-100 dark:border-zinc-800 text-center">
-              <p className="text-zinc-500 dark:text-zinc-400">Tout va bien, rien ne périme bientôt !</p>
+            <div className="glass rounded-[2rem] p-12 border-dashed border-zinc-800 flex flex-col items-center justify-center text-center space-y-2">
+              <div className="h-16 w-16 rounded-full bg-zinc-900 flex items-center justify-center text-3xl">🎉</div>
+              <p className="text-white font-bold">Zéro gaspillage !</p>
+              <p className="text-zinc-500 text-sm">Tout est sous contrôle dans votre frigo.</p>
             </div>
           )}
         </section>
       </main>
+
+      <BottomNav />
     </div>
   );
 }
