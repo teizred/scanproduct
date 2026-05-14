@@ -4,9 +4,10 @@ import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { fridgeItems } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
-import { BellRing, ArrowUpRight, TrendingDown, Info } from "lucide-react";
+import { BellRing, ArrowUpRight, TrendingDown, Info, ChefHat } from "lucide-react";
 import BottomNav from "@/app/components/BottomNav";
 import SignOutButton from "@/app/components/SignOutButton";
+import IndiceInfo from "@/app/components/IndiceInfo";
 import { cn } from "@/lib/utils";
 
 export default async function Dashboard() {
@@ -32,24 +33,36 @@ export default async function Dashboard() {
     (item) => new Date(item.expiryDate) <= threeDaysFromNow
   );
 
-  // 1. Indice de Vigilance (Percentage of items expiring soon)
+  // 1. Freshness Score (100 - vigilanceIndex)
   const vigilanceIndex = items.length > 0 
     ? Math.round((expiringSoon.length / items.length) * 100) 
     : 0;
+  const freshnessScore = 100 - vigilanceIndex;
 
-  // 2. Score Santé (Nutri-Score Average)
-  // Mapping a=4, b=3, c=2, d=1, e=0
+  // 2. Health Score (Based on Nutri-Score)
   const nutriscoreMap: Record<string, number> = { a: 4, b: 3, c: 2, d: 1, e: 0 };
   const nutriscoreReverseMap = ["E", "D", "C", "B", "A"];
   const itemsWithNutriscore = items.filter(i => i.nutriscore && nutriscoreMap[i.nutriscore.toLowerCase()] !== undefined);
   const avgNutriscoreValue = itemsWithNutriscore.length > 0
     ? itemsWithNutriscore.reduce((acc, i) => acc + nutriscoreMap[i.nutriscore!.toLowerCase()], 0) / itemsWithNutriscore.length
-    : 2; // Default to C if no data
+    : 2; 
+  const healthScore = (avgNutriscoreValue / 4) * 100;
   const avgNutriscoreLabel = nutriscoreReverseMap[Math.round(avgNutriscoreValue)];
 
-  // 3. Diversité (Categories count)
+  // 3. Diversity Score (Categories)
   const categories = new Set(items.map(i => i.category).filter(Boolean));
   const diversityCount = categories.size;
+  const diversityScore = Math.min((diversityCount / 8) * 100, 100); // 8 categories = 100%
+
+  // Global Frigo-Score
+  const frigoScore = items.length > 0 
+    ? Math.round((freshnessScore * 0.5) + (healthScore * 0.3) + (diversityScore * 0.2))
+    : 100; // Perfect score if empty!
+
+  let scoreMessage = "Frigo Exemplaire ! 🌟";
+  if (frigoScore < 50) scoreMessage = "Alerte Gaspillage ! ⚠️";
+  else if (frigoScore < 75) scoreMessage = "Peut mieux faire ! 🍎";
+  else if (frigoScore < 90) scoreMessage = "Bonne gestion ! 👍";
 
   return (
     <div className="pb-32">
@@ -65,48 +78,54 @@ export default async function Dashboard() {
       </header>
 
       <main className="px-6 space-y-8 max-w-4xl mx-auto">
-        {/* Hero Vigilance Card */}
+        {/* Hero Frigo-Score Card */}
         <div className={cn(
           "relative group overflow-hidden rounded-[2rem] p-8 glass border-zinc-800 transition-all",
-          vigilanceIndex > 50 ? "bg-gradient-to-br from-rose-500/20 to-transparent border-rose-500/20" : "bg-gradient-to-br from-emerald-500/20 to-transparent border-emerald-500/20"
+          frigoScore < 50 ? "bg-gradient-to-br from-rose-500/20 to-transparent border-rose-500/20" : 
+          frigoScore < 80 ? "bg-gradient-to-br from-amber-500/20 to-transparent border-amber-500/20" :
+          "bg-gradient-to-br from-emerald-500/20 to-transparent border-emerald-500/20"
         )}>
-          <div className="absolute top-0 right-0 p-4">
-            <Info size={20} className="text-zinc-500/50" />
-          </div>
+          <IndiceInfo />
           
           <div className="space-y-6">
             <div className="flex items-center gap-3">
               <div className={cn(
                 "h-12 w-12 rounded-2xl flex items-center justify-center shadow-lg transition-colors",
-                vigilanceIndex > 50 ? "bg-rose-500 shadow-rose-500/40" : "bg-emerald-500 shadow-emerald-500/40"
+                frigoScore < 50 ? "bg-rose-500 shadow-rose-500/40" : 
+                frigoScore < 80 ? "bg-amber-500 shadow-amber-500/40" :
+                "bg-emerald-500 shadow-emerald-500/40"
               )}>
-                <TrendingDown className="text-white" size={24} />
+                <ChefHat className="text-white" size={24} />
               </div>
               <div>
-                <p className="text-zinc-400 text-sm font-medium">Indice de Vigilance</p>
+                <p className="text-zinc-400 text-sm font-medium">Frigo-Score Global</p>
                 <p className={cn(
                   "text-xs font-bold",
-                  vigilanceIndex > 50 ? "text-rose-400" : "text-emerald-400"
+                  frigoScore < 50 ? "text-rose-400" : 
+                  frigoScore < 80 ? "text-amber-400" :
+                  "text-emerald-400"
                 )}>
-                  {vigilanceIndex > 50 ? "Attention requise" : "Frigo sous contrôle"}
+                  {scoreMessage}
                 </p>
               </div>
             </div>
             
             <div className="flex items-baseline gap-2">
-              <span className="text-6xl font-black text-white leading-none tracking-tighter">
-                {vigilanceIndex}
+              <span className="text-7xl font-black text-white leading-none tracking-tighter">
+                {frigoScore}
               </span>
-              <span className="text-zinc-500 font-bold uppercase tracking-widest text-sm">% d'urgence</span>
+              <span className="text-zinc-500 font-bold uppercase tracking-widest text-sm">/ 100</span>
             </div>
 
             <div className="w-full bg-zinc-900 h-2 rounded-full overflow-hidden">
               <div 
                 className={cn(
                   "h-full rounded-full transition-all duration-1000",
-                  vigilanceIndex > 50 ? "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]" : "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                  frigoScore < 50 ? "bg-rose-500" : 
+                  frigoScore < 80 ? "bg-amber-500" :
+                  "bg-emerald-500"
                 )} 
-                style={{ width: `${vigilanceIndex}%` }}
+                style={{ width: `${frigoScore}%` }}
               />
             </div>
           </div>
@@ -116,7 +135,7 @@ export default async function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="glass rounded-[2rem] p-6 border-zinc-800 flex items-center justify-between group">
             <div className="space-y-1">
-              <p className="text-zinc-500 text-sm font-medium">Score Santé Moyen</p>
+              <p className="text-zinc-500 text-sm font-medium">Qualité Nutritionnelle</p>
               <div className="flex items-center gap-2">
                 <p className="text-3xl font-bold text-white">Grade {avgNutriscoreLabel}</p>
                 <div className={cn(
