@@ -11,6 +11,9 @@ type FridgeItem = {
   expiryDate: string | Date;
   quantity: number;
   imageUrl: string | null;
+  category?: string | null;
+  nutriscore?: string | null;
+  ecoscore?: string | null;
 };
 
 export default function FridgeList({ initialItems }: { initialItems: FridgeItem[] }) {
@@ -70,7 +73,20 @@ export default function FridgeList({ initialItems }: { initialItems: FridgeItem[
             </div>
 
             <div className="flex-1 min-w-0 space-y-1">
-              <h3 className="font-bold text-white truncate text-lg tracking-tight">{item.name}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-white truncate text-lg tracking-tight">{item.name}</h3>
+                {item.nutriscore && (
+                  <span className={cn(
+                    "px-1.5 py-0.5 rounded text-[10px] font-black text-white uppercase",
+                    item.nutriscore.toLowerCase() === 'a' ? "bg-emerald-600" :
+                    item.nutriscore.toLowerCase() === 'b' ? "bg-lime-500" :
+                    item.nutriscore.toLowerCase() === 'c' ? "bg-yellow-500" :
+                    item.nutriscore.toLowerCase() === 'd' ? "bg-orange-500" : "bg-rose-600"
+                  )}>
+                    {item.nutriscore}
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-3">
                 <div className={cn(
                   "flex items-center gap-1 text-xs font-black px-2.5 py-1 rounded-xl uppercase tracking-wider",

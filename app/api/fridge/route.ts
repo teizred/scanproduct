@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { barcode, name, expiryDate, quantity, imageUrl, brand, category } = body;
+    const { barcode, name, expiryDate, quantity, imageUrl, brand, category, nutriscore, ecoscore } = body;
 
     if (!name || !expiryDate) {
       return NextResponse.json(
@@ -39,6 +39,8 @@ export async function POST(req: NextRequest) {
           brand,
           category,
           imageUrl,
+          nutriscore,
+          ecoscore,
         });
       }
     }
@@ -53,6 +55,9 @@ export async function POST(req: NextRequest) {
         expiryDate: new Date(expiryDate).toISOString().split("T")[0],
         quantity: quantity || 1,
         imageUrl,
+        category,
+        nutriscore,
+        ecoscore,
       })
       .returning();
 

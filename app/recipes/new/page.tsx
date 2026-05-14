@@ -6,10 +6,10 @@ import { fridgeItems } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
-import GenerateRecipeForm from "./GenerateRecipeForm";
+import GenerateRecipeForm from "@/app/recipes/new/GenerateRecipeForm";
 import BottomNav from "@/app/components/BottomNav";
 
-export default async function NewRecipePage() {
+export default async function NewRecipePage() { 
   const session = await auth.api.getSession({
     headers: await headers(),
   });

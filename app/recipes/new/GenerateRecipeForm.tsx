@@ -5,7 +5,16 @@ import { Loader2, ChefHat, Check, Calendar } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-export default function GenerateRecipeForm({ items }: { items: any[] }) {
+type FridgeItem = {
+  id: string;
+  name: string;
+  expiryDate: string | Date;
+  quantity: number;
+  imageUrl: string | null;
+  nutriscore?: string | null;
+};
+
+export default function GenerateRecipeForm({ items }: { items: FridgeItem[] }) {
   const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
   const [isGenerating, setIsGenerating] = useState(false);
   const router = useRouter();

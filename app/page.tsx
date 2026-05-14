@@ -7,6 +7,7 @@ import { eq, asc } from "drizzle-orm";
 import { BellRing, ArrowUpRight, TrendingDown, Info } from "lucide-react";
 import BottomNav from "@/app/components/BottomNav";
 import SignOutButton from "@/app/components/SignOutButton";
+import { cn } from "@/lib/utils";
 
 export default async function Dashboard() {
   const session = await auth.api.getSession({
@@ -31,16 +32,31 @@ export default async function Dashboard() {
     (item) => new Date(item.expiryDate) <= threeDaysFromNow
   );
 
-  // Mock stats for MVP
-  const moneySaved = "25.50";
-  const antiWasteScore = 850;
+  // 1. Indice de Vigilance (Percentage of items expiring soon)
+  const vigilanceIndex = items.length > 0 
+    ? Math.round((expiringSoon.length / items.length) * 100) 
+    : 0;
+
+  // 2. Score Santé (Nutri-Score Average)
+  // Mapping a=4, b=3, c=2, d=1, e=0
+  const nutriscoreMap: Record<string, number> = { a: 4, b: 3, c: 2, d: 1, e: 0 };
+  const nutriscoreReverseMap = ["E", "D", "C", "B", "A"];
+  const itemsWithNutriscore = items.filter(i => i.nutriscore && nutriscoreMap[i.nutriscore.toLowerCase()] !== undefined);
+  const avgNutriscoreValue = itemsWithNutriscore.length > 0
+    ? itemsWithNutriscore.reduce((acc, i) => acc + nutriscoreMap[i.nutriscore!.toLowerCase()], 0) / itemsWithNutriscore.length
+    : 2; // Default to C if no data
+  const avgNutriscoreLabel = nutriscoreReverseMap[Math.round(avgNutriscoreValue)];
+
+  // 3. Diversité (Categories count)
+  const categories = new Set(items.map(i => i.category).filter(Boolean));
+  const diversityCount = categories.size;
 
   return (
     <div className="pb-32">
       {/* Header */}
       <header className="p-6 flex justify-between items-center bg-zinc-950/50 backdrop-blur-xl sticky top-0 z-30">
         <div className="space-y-1">
-          <p className="text-sm font-medium text-emerald-500 uppercase tracking-widest">Dashboard</p>
+          <p className="text-sm font-medium text-emerald-500 uppercase tracking-widest">Tableau de bord</p>
           <h1 className="text-2xl font-bold text-white">
             Hello, {session.user.name?.split(" ")[0] || "Toi"} ! 👋
           </h1>
@@ -49,32 +65,49 @@ export default async function Dashboard() {
       </header>
 
       <main className="px-6 space-y-8 max-w-4xl mx-auto">
-        {/* Hero Score Card */}
-        <div className="relative group overflow-hidden rounded-[2rem] p-8 glass bg-gradient-to-br from-emerald-500/20 to-transparent border-emerald-500/20">
+        {/* Hero Vigilance Card */}
+        <div className={cn(
+          "relative group overflow-hidden rounded-[2rem] p-8 glass border-zinc-800 transition-all",
+          vigilanceIndex > 50 ? "bg-gradient-to-br from-rose-500/20 to-transparent border-rose-500/20" : "bg-gradient-to-br from-emerald-500/20 to-transparent border-emerald-500/20"
+        )}>
           <div className="absolute top-0 right-0 p-4">
-            <Info size={20} className="text-emerald-500/50" />
+            <Info size={20} className="text-zinc-500/50" />
           </div>
           
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-2xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/40">
+              <div className={cn(
+                "h-12 w-12 rounded-2xl flex items-center justify-center shadow-lg transition-colors",
+                vigilanceIndex > 50 ? "bg-rose-500 shadow-rose-500/40" : "bg-emerald-500 shadow-emerald-500/40"
+              )}>
                 <TrendingDown className="text-white" size={24} />
               </div>
               <div>
-                <p className="text-zinc-400 text-sm font-medium">Score Anti-Gaspi</p>
-                <p className="text-emerald-400 text-xs">+12% vs mois dernier</p>
+                <p className="text-zinc-400 text-sm font-medium">Indice de Vigilance</p>
+                <p className={cn(
+                  "text-xs font-bold",
+                  vigilanceIndex > 50 ? "text-rose-400" : "text-emerald-400"
+                )}>
+                  {vigilanceIndex > 50 ? "Attention requise" : "Frigo sous contrôle"}
+                </p>
               </div>
             </div>
             
             <div className="flex items-baseline gap-2">
               <span className="text-6xl font-black text-white leading-none tracking-tighter">
-                {antiWasteScore}
+                {vigilanceIndex}
               </span>
-              <span className="text-zinc-500 font-bold uppercase tracking-widest text-sm">Points</span>
+              <span className="text-zinc-500 font-bold uppercase tracking-widest text-sm">% d'urgence</span>
             </div>
 
             <div className="w-full bg-zinc-900 h-2 rounded-full overflow-hidden">
-              <div className="bg-emerald-500 h-full w-[85%] rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+              <div 
+                className={cn(
+                  "h-full rounded-full transition-all duration-1000",
+                  vigilanceIndex > 50 ? "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]" : "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                )} 
+                style={{ width: `${vigilanceIndex}%` }}
+              />
             </div>
           </div>
         </div>
@@ -83,21 +116,32 @@ export default async function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="glass rounded-[2rem] p-6 border-zinc-800 flex items-center justify-between group">
             <div className="space-y-1">
-              <p className="text-zinc-500 text-sm font-medium">Économies Estimées</p>
-              <p className="text-3xl font-bold text-white">{moneySaved} €</p>
+              <p className="text-zinc-500 text-sm font-medium">Score Santé Moyen</p>
+              <div className="flex items-center gap-2">
+                <p className="text-3xl font-bold text-white">Grade {avgNutriscoreLabel}</p>
+                <div className={cn(
+                  "h-8 w-8 rounded-lg flex items-center justify-center text-xs font-black text-white",
+                  avgNutriscoreLabel === "A" ? "bg-emerald-600" : 
+                  avgNutriscoreLabel === "B" ? "bg-lime-500" :
+                  avgNutriscoreLabel === "C" ? "bg-yellow-500" :
+                  avgNutriscoreLabel === "D" ? "bg-orange-500" : "bg-rose-600"
+                )}>
+                  {avgNutriscoreLabel}
+                </div>
+              </div>
             </div>
-            <div className="h-12 w-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:border-emerald-500/50 transition-colors">
-              <ArrowUpRight className="text-zinc-400 group-hover:text-emerald-500 transition-colors" size={24} />
+            <div className="h-12 w-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+              <ArrowUpRight className="text-zinc-400" size={24} />
             </div>
           </div>
           
           <div className="glass rounded-[2rem] p-6 border-zinc-800 flex items-center justify-between group">
             <div className="space-y-1">
-              <p className="text-zinc-500 text-sm font-medium">Items en stock</p>
-              <p className="text-3xl font-bold text-white">{items.length}</p>
+              <p className="text-zinc-500 text-sm font-medium">Diversité Alimentaire</p>
+              <p className="text-3xl font-bold text-white">{diversityCount} catégories</p>
             </div>
-            <div className="h-12 w-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:border-blue-500/50 transition-colors">
-              <BellRing className="text-zinc-400 group-hover:text-blue-500 transition-colors" size={24} />
+            <div className="h-12 w-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+              <BellRing className="text-zinc-400" size={24} />
             </div>
           </div>
         </div>
@@ -130,7 +174,14 @@ export default async function Dashboard() {
                     
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-white truncate">{item.name}</h3>
-                      <p className="text-zinc-500 text-sm">Qté: {item.quantity}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-zinc-500 text-xs">Qté: {item.quantity}</p>
+                        {item.nutriscore && (
+                          <span className="text-[10px] font-black text-zinc-400 bg-zinc-800 px-1.5 py-0.5 rounded-md uppercase">
+                            Nutri {item.nutriscore}
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     <div className={`px-4 py-2 rounded-2xl text-sm font-black ${

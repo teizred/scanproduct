@@ -166,6 +166,8 @@ export default function ScanPage() {
           imageUrl: productData?.product.image_url,
           brand: productData?.product.brands,
           category: productData?.product.categories,
+          nutriscore: productData?.product.nutriscore_grade,
+          ecoscore: productData?.product.ecoscore_grade,
         }),
       });
 

@@ -5,6 +5,8 @@ export interface OFFProduct {
     brands?: string;
     image_url?: string;
     categories?: string;
+    nutriscore_grade?: string;
+    ecoscore_grade?: string;
   };
   status: number;
 }

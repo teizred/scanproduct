@@ -15,6 +15,8 @@ export const products = pgTable("products", {
   brand: text("brand"),
   category: text("category"),
   imageUrl: text("image_url"),
+  nutriscore: text("nutriscore"), // a, b, c, d, e
+  ecoscore: text("ecoscore"),
   fetchedAt: timestamp("fetched_at").defaultNow(),
 });
 
@@ -26,6 +28,9 @@ export const fridgeItems = pgTable("fridge_items", {
   expiryDate: date("expiry_date").notNull(),
   quantity: integer("quantity").notNull().default(1),
   imageUrl: text("image_url"),
+  category: text("category"),
+  nutriscore: text("nutriscore"),
+  ecoscore: text("ecoscore"),
   addedAt: timestamp("added_at").defaultNow(),
 });
 
