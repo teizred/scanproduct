@@ -6,8 +6,9 @@ const PROTECTED_ROUTES = ["/", "/fridge", "/recipes", "/settings", "/scan"];
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // BetterAuth session cookie name
-  const sessionCookie = request.cookies.get("better-auth.session_token");
+  // BetterAuth session cookie names (handle both dev and prod/HTTPS)
+  const sessionCookie = request.cookies.get("better-auth.session_token") || 
+                        request.cookies.get("__Secure-better-auth.session_token");
   const hasSession = !!sessionCookie?.value;
 
   const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
