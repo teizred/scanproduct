@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2, Refrigerator, Loader2, Calendar } from "lucide-react";
+import { Trash2, Refrigerator, Loader2, Calendar, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -18,8 +18,13 @@ type FridgeItem = {
 
 export default function FridgeList({ initialItems }: { initialItems: FridgeItem[] }) {
   const [items, setItems] = useState<FridgeItem[]>(initialItems);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const router = useRouter();
+
+  const filteredItems = items.filter((item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleDelete = async (id: string) => {
     setIsDeleting(id);
@@ -55,8 +60,27 @@ export default function FridgeList({ initialItems }: { initialItems: FridgeItem[
   const now = new Date();
 
   return (
-    <div className="space-y-4">
-      {items.map((item) => {
+    <div className="space-y-6">
+      {/* Search Bar */}
+      <div className="relative group">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-emerald-500 transition-colors" size={20} />
+        <input
+          type="text"
+          placeholder="Rechercher un produit..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all backdrop-blur-md"
+        />
+      </div>
+
+      {filteredItems.length === 0 && searchQuery !== "" ? (
+        <div className="glass rounded-[2rem] p-12 text-center space-y-4 border-dashed border-zinc-800">
+          <div className="h-16 w-16 bg-zinc-900 rounded-full flex items-center justify-center mx-auto text-2xl">🔍</div>
+          <p className="text-zinc-500 font-medium">Aucun produit trouvé pour "{searchQuery}"</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4">
+          {filteredItems.map((item) => {
         const expiry = new Date(item.expiryDate);
         const daysLeft = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 3600 * 24));
         const isUrgent = daysLeft <= 1;
@@ -117,7 +141,9 @@ export default function FridgeList({ initialItems }: { initialItems: FridgeItem[
             </button>
           </div>
         );
-      })}
+        })}
+      </div>
+      )}
     </div>
   );
 }

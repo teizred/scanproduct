@@ -5,8 +5,8 @@ import { db } from "@/db";
 import { fridgeItems } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
 import Link from "next/link";
-import { ChevronLeft, Plus, Search } from "lucide-react";
-import FridgeList from "./FridgeList";
+import { ChevronLeft, Plus } from "lucide-react";
+import FridgeList from "@/app/fridge/FridgeList";
 import BottomNav from "@/app/components/BottomNav";
 
 export default async function FridgePage() {
@@ -32,9 +32,9 @@ export default async function FridgePage() {
         </Link>
         <h1 className="text-xl font-bold text-white tracking-tight">Mon Frigo</h1>
         <div className="flex items-center gap-2">
-          <button className="p-2 rounded-2xl bg-zinc-900 border border-zinc-800 text-zinc-400">
-            <Search size={24} />
-          </button>
+          <Link href="/add" className="p-2 rounded-2xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">
+            <Plus size={24} />
+          </Link>
         </div>
       </header>
 
