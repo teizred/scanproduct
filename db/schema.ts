@@ -31,6 +31,7 @@ export const fridgeItems = pgTable("fridge_items", {
   category: text("category"),
   nutriscore: text("nutriscore"),
   ecoscore: text("ecoscore"),
+  isShared: boolean("is_shared").notNull().default(false),
   addedAt: timestamp("added_at").defaultNow(),
 });
 
@@ -49,6 +50,7 @@ export const recipes = pgTable("recipes", {
   title: text("title").notNull(),
   content: text("content").notNull(),
   usedItems: json("used_items"),
+  isShared: boolean("is_shared").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

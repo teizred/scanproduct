@@ -135,7 +135,7 @@ export default async function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="glass rounded-[2rem] p-6 border-zinc-800 flex items-center justify-between group">
             <div className="space-y-1">
-              <p className="text-zinc-500 text-sm font-medium">Qualité Nutritionnelle</p>
+              <p className="text-zinc-400 text-sm font-medium">Qualité Nutritionnelle</p>
               <div className="flex items-center gap-2">
                 <p className="text-3xl font-bold text-white">Grade {avgNutriscoreLabel}</p>
                 <div className={cn(
@@ -156,7 +156,7 @@ export default async function Dashboard() {
           
           <div className="glass rounded-[2rem] p-6 border-zinc-800 flex items-center justify-between group">
             <div className="space-y-1">
-              <p className="text-zinc-500 text-sm font-medium">Diversité Alimentaire</p>
+              <p className="text-zinc-400 text-sm font-medium">Diversité Alimentaire</p>
               <p className="text-3xl font-bold text-white">{diversityCount} catégories</p>
             </div>
             <div className="h-12 w-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
@@ -172,7 +172,7 @@ export default async function Dashboard() {
               <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
               À consommer vite
             </h2>
-            <span className="text-zinc-500 text-sm font-medium">{expiringSoon.length} items</span>
+            <span className="text-zinc-400 text-sm font-medium">{expiringSoon.length} items</span>
           </div>
 
           {expiringSoon.length > 0 ? (

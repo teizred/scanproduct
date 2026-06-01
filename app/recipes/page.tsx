@@ -6,8 +6,8 @@ import { recipes } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
 import { ChevronLeft, Plus, ChefHat, Sparkles } from "lucide-react";
-import ReactMarkdown from "react-markdown";
 import BottomNav from "@/app/components/BottomNav";
+import RecipesList from "@/app/recipes/RecipesList";
 
 export default async function RecipesPage() {
   const session = await auth.api.getSession({
@@ -36,7 +36,7 @@ export default async function RecipesPage() {
         </Link>
       </header>
 
-      <main className="p-6 max-w-4xl mx-auto w-full space-y-8">
+      <main className="p-6 max-w-7xl mx-auto w-full space-y-8">
         {savedRecipes.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 px-6 glass rounded-[2rem] border-dashed border-zinc-800 text-center space-y-6">
             <div className="h-20 w-20 rounded-full bg-zinc-900 flex items-center justify-center">
@@ -55,26 +55,7 @@ export default async function RecipesPage() {
             </Link>
           </div>
         ) : (
-          savedRecipes.map((recipe) => (
-            <div key={recipe.id} className="glass rounded-[2rem] border-zinc-800 overflow-hidden">
-              <div className="bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 p-6 border-b border-zinc-800 flex items-center justify-between">
-                <div className="space-y-1">
-                  <h2 className="text-xl font-bold text-white tracking-tight leading-none">
-                    {recipe.title}
-                  </h2>
-                  <p className="text-xs text-zinc-500 font-medium uppercase tracking-widest">
-                    Générée le {new Date(recipe.createdAt!).toLocaleDateString("fr-FR")}
-                  </p>
-                </div>
-                <div className="h-10 w-10 rounded-xl bg-zinc-950 flex items-center justify-center text-emerald-500 border border-zinc-800">
-                  <ChefHat size={20} />
-                </div>
-              </div>
-              <div className="p-8 prose prose-zinc dark:prose-invert max-w-none prose-emerald prose-p:text-zinc-300 prose-headings:text-white prose-li:text-zinc-300">
-                <ReactMarkdown>{recipe.content}</ReactMarkdown>
-              </div>
-            </div>
-          ))
+          <RecipesList savedRecipes={savedRecipes} />
         )}
       </main>
 

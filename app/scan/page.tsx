@@ -30,6 +30,22 @@ export default function ScanPage() {
 
   const readerRef = useRef<BrowserMultiFormatReader | null>(null);
 
+  const handleBarcodeScanned = async (code: string) => {
+    setBarcode(code);
+    setIsProcessing(true);
+    try {
+      const data = await fetchProductByBarcode(code);
+      setProductData(data);
+      setName(data?.product.product_name || "Produit inconnu");
+      setStep("expiry");
+    } catch {
+      setName("Produit inconnu");
+      setStep("expiry");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   // 1. Scanner Logic
   useEffect(() => {
     if (step === "confirm") return;
@@ -51,7 +67,7 @@ export default function ScanPage() {
           const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
           if (videoRef.current) videoRef.current.srcObject = stream;
         }
-      } catch (err) {
+      } catch {
         setError("Erreur caméra. Vérifiez vos permissions.");
       }
     };
@@ -59,22 +75,6 @@ export default function ScanPage() {
     startScanner();
     return () => { if (controls) controls.stop(); };
   }, [step]);
-
-  const handleBarcodeScanned = async (code: string) => {
-    setBarcode(code);
-    setIsProcessing(true);
-    try {
-      const data = await fetchProductByBarcode(code);
-      setProductData(data);
-      setName(data?.product.product_name || "Produit inconnu");
-      setStep("expiry");
-    } catch (err) {
-      setName("Produit inconnu");
-      setStep("expiry");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
 
   const handleCaptureExpiry = async () => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -94,7 +94,7 @@ export default function ScanPage() {
       setExpiryDate(data.date || "");
       if (!data.date) setError("Date non détectée. Saisie manuelle requise.");
       setStep("confirm");
-    } catch (err) {
+    } catch {
       setStep("confirm");
     } finally {
       setIsProcessing(false);
@@ -151,13 +151,21 @@ export default function ScanPage() {
             )}
 
             {!isProcessing && (
-              <div className="fixed bottom-32 left-0 right-0 flex flex-col items-center gap-6 z-40">
+              <div className="absolute bottom-40 left-0 right-0 flex flex-col items-center gap-4 z-40">
                 {step === "expiry" && (
-                  <button onClick={handleCaptureExpiry} className="w-20 h-20 bg-emerald-500 rounded-full border-[6px] border-white/20 flex items-center justify-center shadow-xl shadow-emerald-500/40">
+                  <button 
+                    onClick={handleCaptureExpiry} 
+                    className="w-20 h-20 bg-emerald-500 rounded-full border-[6px] border-white/20 flex items-center justify-center shadow-xl shadow-emerald-500/40 hover:scale-105 active:scale-95 transition-all"
+                  >
                     <Camera size={32} className="text-white" />
                   </button>
                 )}
-                <button onClick={() => setStep("confirm")} className="glass px-8 py-4 rounded-[2rem] text-white font-bold text-sm shadow-2xl">Saisir manuellement</button>
+                <button 
+                  onClick={() => setStep("confirm")} 
+                  className="glass px-8 py-4 rounded-2xl text-white font-bold text-xs uppercase tracking-widest shadow-2xl active:scale-95 transition-all"
+                >
+                  Saisir manuellement
+                </button>
               </div>
             )}
           </div>

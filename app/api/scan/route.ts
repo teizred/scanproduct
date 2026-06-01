@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     const mediaType = imageBase64.includes("image/png") ? "image/png" : "image/jpeg";
 
     const response = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20241022",
+      model: "claude-sonnet-4-6",
       max_tokens: 1024,
       system: "You are an assistant designed to extract expiry dates from product images. You must reply ONLY with a valid ISO 8601 date string (YYYY-MM-DD) or an empty string if no date can be found. No explanations, no markdown formatting.",
       messages: [

@@ -23,7 +23,7 @@ export default function ScannerOverlay({ step }: ScannerOverlayProps) {
         <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-emerald-500 rounded-br-3xl" />
       </div>
 
-      <div className="absolute bottom-24 left-0 right-0 text-center">
+      <div className="absolute top-28 left-0 right-0 text-center">
         <span className="bg-emerald-500 text-white text-[10px] font-black uppercase tracking-[0.2em] px-4 py-2 rounded-full shadow-lg shadow-emerald-500/20">
           {step === "barcode" ? "Scan Code-barres" : "Scan Date"}
         </span>
