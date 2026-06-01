@@ -7,7 +7,7 @@ import { eq, and, ne, count, desc } from "drizzle-orm";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import BottomNav from "@/app/components/BottomNav";
-import SocialFeed from "./SocialFeed";
+import SocialFeed from "@/app/social/SocialFeed";
 
 export default async function SocialPage() {
   const session = await auth.api.getSession({
